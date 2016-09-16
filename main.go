@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-	"sync/atomic"
-	"time"
 
 	"path/filepath"
 	"regexp"
@@ -28,11 +26,6 @@ var (
 	lock    sync.Mutex
 	running bool
 	proc    *exec.Cmd
-)
-
-const (
-	isRunning = iota
-	isStopped
 )
 
 func main() {
@@ -100,6 +93,7 @@ func build(buildCmd, executeCms string, event <-chan struct{}) {
 			kill(true)
 			continue
 		}
+
 		go run(executeCms)
 	}
 }
@@ -188,34 +182,36 @@ func watch(notif chan<- struct{}, watch string, include, exclude *regexp.Regexp)
 		log.WithFields(log.F("error", err)).Fatal("could not walk watch path")
 	}
 
-	var trigger atomic.Value
-	cancel := make(chan struct{})
+	// evt := make(chan struct{})
+
+	// go func() {
+	// 	for {
+	// 		<-evt
+
+	// 	SELECT:
+	// 		select {
+	// 		case <-time.After(700 * time.Millisecond):
+	// 			notif <- struct{}{}
+	// 		case <-evt:
+	// 			goto SELECT
+	// 		}
+	// 	}
+	// }()
 
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
 
-				if include != nil && !include.MatchString(event.Name) {
-					continue
-				}
+				if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 
-				// events already triggered withing timeout
-				if trigger.Load() == isRunning {
-					cancel <- struct{}{}
-				} else {
-					trigger.Store(isRunning)
-				}
-
-				go func() {
-					select {
-					case <-time.After(700 * time.Millisecond):
-						notif <- struct{}{}
-						trigger.Store(isStopped)
-					case <-cancel:
-						// log.Debug("Cancelled")
+					if include != nil && !include.MatchString(event.Name) {
+						continue
 					}
-				}()
+
+					notif <- struct{}{}
+					// evt <- struct{}{}
+				}
 
 			case err := <-watcher.Errors:
 				log.WithFields(log.F("error", err)).Error("watcher error")
