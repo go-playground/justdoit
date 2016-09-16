@@ -96,13 +96,15 @@ func build(buildCmd, executeCms string, event <-chan struct{}) {
 
 	for range event {
 		log.Notice("Running build command")
-		execute(buildCmd, false)
+		if !execute(buildCmd, false) {
+			kill(true)
+			continue
+		}
 		go run(executeCms)
 	}
 }
 
-func run(command string) {
-
+func kill(unlock bool) {
 	lock.Lock()
 
 	if running {
@@ -117,11 +119,19 @@ func run(command string) {
 		running = false
 	}
 
+	if unlock {
+		lock.Unlock()
+	}
+}
+
+func run(command string) {
+
+	kill(false)
 	execute(command, true)
 }
 
 // runs generically provided command
-func execute(command string, setProc bool) {
+func execute(command string, setProc bool) (success bool) {
 
 	args := strings.Split(command, " ")
 
@@ -135,12 +145,16 @@ func execute(command string, setProc bool) {
 		proc = cmd
 		running = true
 		lock.Unlock()
+		log.Notice("Executing run command")
 	}
 
 	err := cmd.Run()
-	if err != nil {
+	if !setProc && err != nil { // not outputting killed for already running
 		log.WithFields(log.F("error", err)).Notice("error stopping cmd")
+		return false
 	}
+
+	return true
 }
 
 func watch(notif chan<- struct{}, watch string, include, exclude *regexp.Regexp) {
