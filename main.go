@@ -87,14 +87,17 @@ func main() {
 
 func build(buildCmd, executeCms string, event <-chan struct{}) {
 
+	buildArgs := strings.Split(buildCmd, " ")
+	executeArgs := strings.Split(executeCms, " ")
+
 	for range event {
 		log.Notice("Running build command")
-		if !execute(buildCmd, false) {
+		if !execute(buildArgs, false) {
 			kill(true)
 			continue
 		}
 
-		go run(executeCms)
+		go run(executeArgs)
 	}
 }
 
@@ -118,16 +121,14 @@ func kill(unlock bool) {
 	}
 }
 
-func run(command string) {
+func run(args []string) {
 
 	kill(false)
-	execute(command, true)
+	execute(args, true)
 }
 
 // runs generically provided command
-func execute(command string, setProc bool) (success bool) {
-
-	args := strings.Split(command, " ")
+func execute(args []string, setProc bool) (success bool) {
 
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Env = os.Environ()
