@@ -1,5 +1,10 @@
 ##justdoit
 
+![Project status](https://img.shields.io/badge/version-1.0.0-green.svg)
+[![Build Status](https://semaphoreci.com/api/v1/joeybloggs/justdoit/branches/master/badge.svg)](https://semaphoreci.com/joeybloggs/justdoit)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-playground/justdoit)](https://goreportcard.com/report/github.com/go-playground/justdoit)
+![License](https://img.shields.io/dub/l/vibe-d.svg)
+
 Why another auto-compile daemon
 -----------------------
 I couldn't find all of the very basic options I needed that worked correctly in
