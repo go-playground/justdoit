@@ -108,6 +108,7 @@ func kill(unlock bool) {
 
 		// kill process
 
+		log.Notice("Killing Process")
 		err := proc.Process.Kill()
 		if err != nil {
 			log.WithFields(log.F("error", err)).Error("could not kill process")
