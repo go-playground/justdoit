@@ -106,12 +106,15 @@ func kill(unlock bool) {
 
 	if running {
 
-		// kill process
+		// process can be nil
+		if proc != nil && proc.Process != nil {
 
-		log.Notice("Killing Process")
-		err := proc.Process.Kill()
-		if err != nil {
-			log.WithFields(log.F("error", err)).Error("could not kill process")
+			log.Notice("Killing Process")
+
+			err := proc.Process.Kill()
+			if err != nil {
+				log.WithFields(log.F("error", err)).Error("could not kill process")
+			}
 		}
 
 		running = false
