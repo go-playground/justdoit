@@ -17,9 +17,8 @@ import (
 )
 
 func init() {
-	cLog := console.New()
-	cLog.RedirectSTDLogOutput(true)
-	log.RegisterHandler(cLog, log.AllLevels...)
+	cLog := console.New(true)
+	log.AddHandler(cLog, log.AllLevels...)
 }
 
 var (
